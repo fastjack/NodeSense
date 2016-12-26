@@ -8,6 +8,9 @@
 #include <DallasTemperature.h>
 
 #define OWBUS 2     // D4 on NodeMCU
+#define WIFI_RETRY_UPDATE 200 // update every 200 ms
+#define WIFI_RETRY_LIMIT 30*5 // 30 seconds
+#define STATUS_LED LED_BUILTIN
 
 OneWire oneWire(OWBUS);
 DallasTemperature sensors(&oneWire);
@@ -66,15 +69,34 @@ void setup_ota() {
 }
 
 void setup_wifi() {
+const char spinner[4] = {'/', '-', '\\', '|'};
+static int retry_counter = 0;
+char hostname[32];
+
+  WiFi.softAPdisconnect(true);
+  WiFi.disconnect();
+  sprintf(hostname, "NodeSense_%06X", ESP.getChipId());
+  WiFi.hostname((char *)hostname);
   WiFi.mode(WIFI_STA);
+  #ifdef DEBUG
+  Serial.print("Connecting to WiFi:  ");
+  #endif
   WiFi.begin(configuration.getWifiStationSsid(), configuration.getWifiStationPassword());
-  while (WiFi.waitForConnectResult() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED && retry_counter < WIFI_RETRY_LIMIT) {
     #ifdef DEBUG
-    Serial.println("Connection Failed! Rebooting...");
+    Serial.printf("\b%c", spinner[retry_counter%4]);
     #endif
-    delay(5000);
+    digitalWrite(STATUS_LED, retry_counter%2 == 0 ? HIGH : LOW);
+    retry_counter++;
+    delay(WIFI_RETRY_UPDATE);
+  }
+  if (retry_counter >= WIFI_RETRY_LIMIT) {
+    #ifdef DEBUG
+    Serial.println("\nTimeout reached. Could not connect to WiFi. Rebooting...");
+    #endif
     ESP.restart();
   }
+  digitalWrite(STATUS_LED, HIGH);
 }
 
 void setup_configuration() {
@@ -84,7 +106,6 @@ void setup_configuration() {
     Serial.println("Wifi configuration is wrong");
   }
   #endif
-
 }
 
 
@@ -93,13 +114,16 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Booting");
   #endif
+  pinMode(STATUS_LED, OUTPUT);
+  digitalWrite(STATUS_LED, HIGH);
 
+  setup_configuration();
   setup_wifi();
   setup_ota();
   setup_temp_sensors();
 
   #ifdef DEBUG
-  Serial.println("Ready");
+  Serial.println("\nReady");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
   Serial.print("OTA password: ");
