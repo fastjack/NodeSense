@@ -1,0 +1,5 @@
+{
+  "wifi_station_ssid": "YOUR SSID HERE",
+  "wifi_station_password": "YOUR WIFI PASSWORD HERE",
+  "wifi_station_enabled": true
+}
