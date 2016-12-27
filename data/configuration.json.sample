@@ -1,5 +1,11 @@
 {
   "wifi_station_ssid": "YOUR SSID HERE",
   "wifi_station_password": "YOUR WIFI PASSWORD HERE",
-  "wifi_station_enabled": true
+  "wifi_station_enabled": true,
+  "mqtt_host": "YOUR MQTT BROKER",
+  "mqtt_port": 1883,
+  "mqtt_user": "MQTT USER",
+  "mqtt_password": "MQTT PASSWORD",
+  "mqtt_device_name": "MQTT CLIENT NAME",
+  "mqtt_enabled": true
 }
