@@ -6,16 +6,20 @@
 #include <ArduinoJson.h>
 #include <Esp8266Configuration.h>
 #include <DallasTemperature.h>
+#include <PubSubClient.h>
 
 #define OWBUS 2     // D4 on NodeMCU
 #define WIFI_RETRY_UPDATE 200 // update every 200 ms
 #define WIFI_RETRY_LIMIT 30*5 // 30 seconds
 #define STATUS_LED LED_BUILTIN
+#define TEMPERATURE_TOPIC "sensors/temperature/current"
 
 OneWire oneWire(OWBUS);
 DallasTemperature sensors(&oneWire);
 DeviceAddress tempSensor;
 Esp8266Configuration configuration;
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 const char* ota_password = "NodeSensePass";
 
@@ -108,6 +112,34 @@ void setup_configuration() {
   #endif
 }
 
+void setup_mqtt() {
+  if (configuration.isMqttConfigurationValid() && configuration.isMqttEnabled()) {
+    client.setServer(configuration.getMqttServer(), configuration.getMqttPort());
+  }
+}
+
+void reconnect_mqtt() {
+  if (!client.connected()) {
+    #ifdef DEBUG
+    Serial.println("Trying to connect to MQTT broker...");
+    #endif
+    if (client.connect(configuration.getMqttDeviceName(), configuration.getMqttUser(), configuration.getMqttPassword())) {
+      #ifdef DEBUG
+      Serial.println("Connection established");
+      #endif
+    } else {
+      #ifdef DEBUG
+      Serial.print("Connection failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 2 seconds");
+      Serial.print("using server: ");
+      Serial.print(configuration.getMqttServer());
+      Serial.print(":");
+      Serial.println(configuration.getMqttPort());
+      #endif
+    }
+  }
+}
 
 void setup() {
   #ifdef DEBUG
@@ -121,6 +153,7 @@ void setup() {
   setup_wifi();
   setup_ota();
   setup_temp_sensors();
+  setup_mqtt();
 
   #ifdef DEBUG
   Serial.println("\nReady");
@@ -134,12 +167,18 @@ void setup() {
 void loop() {
   ArduinoOTA.handle();
 
+  if (!client.connected()) {
+    reconnect_mqtt();
+  }
+
   sensors.requestTemperatures();
   temperature = sensors.getTempCByIndex(0);
+  dtostrf(temperature, 2, 2, temp_string);
   #ifdef DEBUG
   Serial.print("Current temperature: ");
-  Serial.print(temperature);
+  Serial.print(temp_string);
   Serial.println(" °C");
   #endif
+  client.publish(TEMPERATURE_TOPIC, temp_string, true);
   delay(10000);
 }
