@@ -12,7 +12,7 @@
 #define WIFI_RETRY_UPDATE 200 // update every 200 ms
 #define WIFI_RETRY_LIMIT 30*5 // 30 seconds
 #define STATUS_LED LED_BUILTIN
-#define TEMPERATURE_TOPIC "sensors/temperature/current"
+#define TEMPERATURE_TOPIC "home/livingroom/temperature"
 
 OneWire oneWire(OWBUS);
 DallasTemperature sensors(&oneWire);
