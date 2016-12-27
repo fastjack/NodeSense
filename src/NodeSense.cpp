@@ -31,7 +31,7 @@ void setup_temp_sensors() {
   #ifdef DEBUG
   if (!sensors.getAddress(tempSensor, 0)) Serial.println("Unable to find address for device 0");
   #endif
-  sensors.setResolution(9);
+  sensors.setResolution(12);
 }
 
 void setup_ota() {
