@@ -179,6 +179,8 @@ void loop() {
   Serial.print(temp_string);
   Serial.println(" °C");
   #endif
-  client.publish(TEMPERATURE_TOPIC, temp_string, true);
+  if (temperature > -127.0) {
+    client.publish(TEMPERATURE_TOPIC, temp_string, true);
+  }
   delay(10000);
 }
