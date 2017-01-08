@@ -25,6 +25,7 @@ const char* ota_password = "NodeSensePass";
 
 float temperature = 0.0;
 char temp_string[15];
+static char hostname[32];
 
 void setup_temp_sensors() {
   sensors.begin();
@@ -75,11 +76,10 @@ void setup_ota() {
 void setup_wifi() {
 const char spinner[4] = {'/', '-', '\\', '|'};
 static int retry_counter = 0;
-char hostname[32];
 
   WiFi.softAPdisconnect(true);
   WiFi.disconnect();
-  sprintf(hostname, "NodeSense_%06X", ESP.getChipId());
+  sprintf(hostname, "NodeSense-%06X", ESP.getChipId());
   WiFi.hostname((char *)hostname);
   WiFi.mode(WIFI_STA);
   #ifdef DEBUG
@@ -101,6 +101,15 @@ char hostname[32];
     ESP.restart();
   }
   digitalWrite(STATUS_LED, HIGH);
+}
+
+void setup_mdns() {
+  if (!MDNS.begin(hostname)) {
+    #ifdef DEBUG
+    Serial.println("Error setting up MDNS responder!");
+    #endif
+  }
+  MDNS.addService("arduino", "tcp", 8266);
 }
 
 void setup_configuration() {
@@ -151,6 +160,7 @@ void setup() {
 
   setup_configuration();
   setup_wifi();
+  setup_mdns();
   setup_ota();
   setup_temp_sensors();
   setup_mqtt();
