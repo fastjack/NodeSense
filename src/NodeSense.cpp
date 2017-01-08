@@ -79,7 +79,7 @@ static int retry_counter = 0;
 
   WiFi.softAPdisconnect(true);
   WiFi.disconnect();
-  sprintf(hostname, "NodeSense_%06X", ESP.getChipId());
+  sprintf(hostname, "NodeSense-%06X", ESP.getChipId());
   WiFi.hostname((char *)hostname);
   WiFi.mode(WIFI_STA);
   #ifdef DEBUG
