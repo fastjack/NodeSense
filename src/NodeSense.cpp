@@ -103,6 +103,15 @@ static int retry_counter = 0;
   digitalWrite(STATUS_LED, HIGH);
 }
 
+void setup_mdns() {
+  if (!MDNS.begin(hostname)) {
+    #ifdef DEBUG
+    Serial.println("Error setting up MDNS responder!");
+    #endif
+  }
+  MDNS.addService("arduino", "tcp", 8266);
+}
+
 void setup_configuration() {
   configuration.read();
   #ifdef DEBUG
@@ -151,6 +160,7 @@ void setup() {
 
   setup_configuration();
   setup_wifi();
+  setup_mdns();
   setup_ota();
   setup_temp_sensors();
   setup_mqtt();
