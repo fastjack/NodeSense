@@ -25,6 +25,7 @@ const char* ota_password = "NodeSensePass";
 
 float temperature = 0.0;
 char temp_string[15];
+static char hostname[32];
 
 void setup_temp_sensors() {
   sensors.begin();
@@ -75,7 +76,6 @@ void setup_ota() {
 void setup_wifi() {
 const char spinner[4] = {'/', '-', '\\', '|'};
 static int retry_counter = 0;
-char hostname[32];
 
   WiFi.softAPdisconnect(true);
   WiFi.disconnect();
